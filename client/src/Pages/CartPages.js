@@ -15,6 +15,8 @@ const CartPage = () => {
     const [clientToken, setClientToken] = useState("");
     const [instance, setInstance] = useState("");
     const [loading, setLoading] = useState(false);
+    const [braintreeLoading, setBraintreeLoading] = useState(true);
+    const [braintreeError, setBraintreeError] = useState(null);
     const navigate = useNavigate();
 
     //total price
@@ -48,21 +50,38 @@ const CartPage = () => {
     //get payment gateway token
     const getToken = async () => {
         try {
+            setBraintreeLoading(true);
+            setBraintreeError(null);
             const { data } = await axios.get("/api/v1/product/braintree/token");
+            console.log("Braintree token received:", data?.clientToken ? "Yes" : "No");
             setClientToken(data?.clientToken);
+            setBraintreeLoading(false);
         } catch (error) {
-            console.log(error);
+            console.log("Braintree token error:", error);
+            setBraintreeError("Failed to load payment system");
+            setBraintreeLoading(false);
         }
     };
+
     useEffect(() => {
-        getToken();
+        if (auth?.token) {
+            getToken();
+        }
     }, [auth?.token]);
 
     //handle payments
     const handlePayment = async () => {
         try {
             setLoading(true);
-            const { nonce } = await instance
+            if (!instance) {
+                toast.error("Payment instance not available");
+                setLoading(false);
+                return;
+            }
+
+            const { nonce } = await instance.requestPaymentMethod();
+            console.log("Payment nonce generated:", nonce);
+
             const { data } = await axios.post("/api/v1/product/braintree/payment", {
                 nonce,
                 cart,
@@ -73,13 +92,15 @@ const CartPage = () => {
             navigate("/dashboard/user/orders");
             toast.success("Payment Completed Successfully ");
         } catch (error) {
-            console.log(error);
+            console.log("Payment error:", error);
             setLoading(false);
+            toast.error("Payment failed. Please try again.");
         }
     };
+
     return (
         <Layout>
-            <div className=" cart-page" style={{ marginTop: "0px" }}>
+            <div className="cart-page" style={{ marginTop: "0px" }}>
                 <div className="row">
                     <div className="col-md-12" >
                         <h1 className="text-center bg-light p-2 mb-1">
@@ -167,24 +188,39 @@ const CartPage = () => {
                                 </div>
                             )}
                             <div className="mt-2">
-                                {!clientToken || !auth?.token || !cart?.length ? (
-                                    ""
+                                {braintreeLoading ? (
+                                    <p className="text-center">Loading payment options...</p>
+                                ) : braintreeError ? (
+                                    <div className="alert alert-danger">
+                                        <AiFillWarning /> {braintreeError}
+                                    </div>
+                                ) : (!clientToken || !auth?.token || !cart?.length) ? (
+                                    <div className="alert alert-info">
+                                        {!auth?.token ? "Please login to proceed with payment" :
+                                            !cart?.length ? "Add items to cart to proceed with payment" :
+                                                !clientToken ? "Payment system not available" : ""}
+                                    </div>
                                 ) : (
                                     <>
-                                        <DropIn
-                                            options={{
-                                                authorization: clientToken,
-                                                paypal: {
-                                                    flow: "vault",
-                                                },
-                                            }}
-                                            onInstance={(instance) => setInstance(instance)}
-                                        />
-
+                                        <div id="braintree-drop-in-container" style={{ minHeight: "200px" }}>
+                                            <DropIn
+                                                options={{
+                                                    authorization: clientToken,
+                                                    paypal: {
+                                                        flow: "vault",
+                                                    },
+                                                }}
+                                                onInstance={(instance) => setInstance(instance)}
+                                                onError={(err) => {
+                                                    console.error("DropIn error:", err);
+                                                    setBraintreeError("Payment system error. Please refresh and try again.");
+                                                }}
+                                            />
+                                        </div>
                                         <button
                                             className="btn btn-primary"
                                             onClick={handlePayment}
-                                        //disabled={loading || !instance || !auth?.user?.address}
+                                            disabled={loading || !instance || !auth?.user?.address}
                                         >
                                             {loading ? "Processing ...." : "Make Payment"}
                                         </button>

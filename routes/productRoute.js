@@ -4,6 +4,66 @@ import Formidable from 'express-formidable';
 import { brainTreePaymentController, braintreeTokenController, createProductContoller, deleteProductController, filterProductController, getProductController, getProductPhotoController, getSingleProductContoller, productCategoryController, productCountController, productListController, relatedProductController, searchProductController, updateProductController } from '../controllers/productController.js';
 
 const router = express.Router();
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Product:
+ *       type: object
+ *       required:
+ *         - name
+ *         - slug
+ *         - description
+ *         - price
+ *         - category
+ *         - quantity
+ *       properties:
+ *         _id:
+ *           type: string
+ *           format: uuid
+ *           description: Unique identifier for the product
+ *         name:
+ *           type: string
+ *           description: Name of the product
+ *         slug:
+ *           type: string
+ *           description: URL-friendly identifier for the product
+ *         description:
+ *           type: string
+ *           description: Detailed description of the product
+ *         price:
+ *           type: number
+ *           description: Price of the product
+ *         category:
+ *           type: string
+ *           format: uuid
+ *           description: Category ID the product belongs to
+ *         quantity:
+ *           type: integer
+ *           description: Available quantity of the product
+ *         photo:
+ *           type: object
+ *           properties:
+ *             data:
+ *               type: string
+ *               format: binary
+ *               description: Image data stored as a binary buffer
+ *             contentType:
+ *               type: string
+ *               description: MIME type of the image (e.g., image/png, image/jpeg)
+ *         shipping:
+ *           type: boolean
+ *           description: Indicates whether the product requires shipping
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *           description: Timestamp when the product was created
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *           description: Timestamp when the product was last updated
+ */
+
 
 router.post('/create-product', reqsignUp, isAdmin, Formidable(), createProductContoller);
 

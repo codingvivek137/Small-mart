@@ -8,6 +8,9 @@ import categoryRoutes from "./routes/categoryRoute.js"
 import productRoutes from "./routes/productRoute.js"
 import bodyParser from "body-parser";
 import cors from "cors";
+import swaggerJSDoc from "swagger-jsdoc";
+import swaggerUI from "swagger-ui-express";
+
 dotenv.config();
 
 const app = express();
@@ -33,3 +36,23 @@ const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
     console.log(`server in running on ${PORT}`.bgBlue.white)
 })
+
+const options = {
+    definition: {
+        openapi: "3.0.0",
+        info: {
+            title: "small-mart",
+            version: "1.0.0",
+            Descriptions: "a e-commerce website"
+        },
+        servers: [
+            {
+                url: "http://localhost:8080"
+            }
+        ],
+    },
+    apis: ["./routes/*.js"]
+}
+
+const specs = swaggerJSDoc(options);
+app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(specs));
