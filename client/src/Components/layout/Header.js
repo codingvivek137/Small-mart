@@ -10,7 +10,7 @@ import { useCart } from "../../Context/Cart.js";
 
 const Header = () => {
     const [auth, setAuth] = useAuth();
-    const [cart, setCart] = useCart();
+    const [cart, setCart, clearCart] = useCart();
     const categories = useCategory();
     const handleLogout = () => {
         setAuth({
@@ -18,6 +18,7 @@ const Header = () => {
             user: null,
             token: "",
         });
+        clearCart();
         localStorage.removeItem("auth");
         toast.success("Logout Successfully");
     };
